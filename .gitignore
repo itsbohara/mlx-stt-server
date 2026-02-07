@@ -205,3 +205,29 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# MLX STT Server - Project specific
+# Model files (large binaries)
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+models/
+checkpoints/
+huggingface/
+
+# Audio test files
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+
+# Local data
+data/
+temp/
+tmp/
+
+# macOS
+.DS_Store
