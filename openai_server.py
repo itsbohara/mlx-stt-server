@@ -7,6 +7,7 @@ import io
 import json
 import logging
 import os
+import sys
 import tempfile
 
 import mlx.core as mx
@@ -45,7 +46,7 @@ try:
     logger.info("Model loaded successfully!")
 except Exception as e:
     logger.error(f"Failed to load model: {e}")
-    stt_model = None
+    sys.exit(1)
 
 
 @app.get("/v1/models")
@@ -69,7 +70,6 @@ async def health():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "model_loaded": stt_model is not None,
         "model_path": MODEL_PATH,
     }
 
@@ -88,13 +88,6 @@ async def transcribe_audio(
 
     Compatible with OpenAI's /v1/audio/transcriptions endpoint
     """
-    if stt_model is None:
-        logger.error("Model not loaded!")
-        return JSONResponse(
-            status_code=500,
-            content={"error": {"message": "Model not loaded", "type": "server_error"}},
-        )
-
     try:
         # Read and save uploaded file temporarily
         audio_data = await file.read()
@@ -164,11 +157,6 @@ async def realtime_transcription(websocket: WebSocket):
     """
     await websocket.accept()
     logger.info("WebSocket connection established for real-time transcription")
-
-    if stt_model is None:
-        await websocket.send_json({"type": "error", "message": "Model not loaded"})
-        await websocket.close()
-        return
 
     transcriber = None
     sample_rate = stt_model.preprocessor_config.sample_rate
