@@ -21,8 +21,12 @@ from fastapi.responses import JSONResponse
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Configuration
+DEFAULT_MODEL = "parakeet-tdt-0.6b-v3"
+# DEFAULT_MODEL = "voxtral-mini-4b-realtime-4bit"
+
 app = FastAPI(
-    title="Parakeet STT Server",
+    title="Zero STT Server",
     description="OpenAI-compatible Speech-to-Text API using Parakeet model",
     version="1.0.0",
 )
@@ -37,7 +41,11 @@ app.add_middleware(
 )
 
 # Load the model
-MODEL_PATH = "/Users/itsbohara/ai/models/parakeet-tdt-0.6b-v3"
+# MODEL_PATH = "/Users/itsbohara/ai/models/parakeet-tdt-0.6b-v3"
+MODEL_PATH = "/Volumes/Mahesh/ai/models/mlx-community--parakeet-tdt-0.6b-v3"
+# MODEL_PATH = (
+#     "/Volumes/Mahesh/ai/models/mlx-community--Voxtral-Mini-4B-Realtime-2602-4bit"
+# )
 logger.info(f"Loading Parakeet model from {MODEL_PATH}...")
 
 try:
@@ -60,7 +68,13 @@ async def list_models():
                 "object": "model",
                 "created": 1700000000,
                 "owned_by": "local",
-            }
+            },
+            {
+                "id": "voxtral-mini-4b-realtime-4bit",
+                "object": "model",
+                "owned_by": "mlx-community",
+                "permission": [],
+            },
         ],
     }
 
@@ -77,7 +91,7 @@ async def health():
 @app.post("/v1/audio/transcriptions")
 async def transcribe_audio(
     file: UploadFile = File(...),
-    model: str = Form("parakeet-tdt-0.6b-v3"),
+    model: str = Form(DEFAULT_MODEL),
     language: str = Form(None),
     response_format: str = Form("json"),
     temperature: float = Form(0.0),
