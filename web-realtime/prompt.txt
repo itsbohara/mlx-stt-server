@@ -1,0 +1,90 @@
+Given the following code diff, generate a conventional commit message following these rules:
+
+1.  **Format:** `type[(scope)]: description`
+2.  **Scope is optional.** Use a scope ONLY if it significantly clarifies which *specific* part of the codebase the change affects. If the project is small, or the change impacts the entire project, OMIT the scope.
+3.  **Types MUST be from:**
+    *   `fix`: for bug fixes that affect the codebase or application behavior
+    *   `feat`: ONLY for new user-visible functionality or features
+    *   `chore`: Routine tasks, maintenance, or dependency updates that don't fit other categories
+    *   `docs`: for documentation changes only
+    *   `style`: for formatting, white-space, semicolons (changes that don't affect code execution)
+    *   `refactor`: Code changes that neither fix bugs nor add features, just improve code structure
+    *   `revert`: for commits that revert previous commits
+    *   `test`: for adding or modifying tests
+    *   `perf`: for performance improvements
+    *   `ci`: Changes to CI/CD pipelines (e.g., GitHub Actions, Jenkins).
+    *   `build`: Changes to build system, dependencies, or build tools (e.g., Gradle, npm, CMake)
+4.  **Description MUST:**
+    *   Start with a lowercase verb (add, fix, improve, remove, etc.)
+    *   Use imperative mood ("fix bug" not "fixed bugs")
+    *   Be concise (ideally under 50 characters, but allow up to 72 if needed for clarity)
+    *   **Clearly describe the *problem* being solved.**  Focus on *what* the code *prevents* or *corrects*.
+5.  If unsure about the scope, or if the change is broad, omit it entirely. Don't invent a scope if it doesn't naturally emerge from the diff.
+6.  **Prioritize clarity and accuracy in the description over strict length constraints.**  A slightly longer, more descriptive message is better than a short, vague one.
+7.  Examples:
+    *   `feat: add user registration endpoint`
+    *   `fix(auth): prevent session expiration during activity`
+    *   `refactor(api): migrate to async middleware`
+    *   `revert: undo login API changes`
+    *   `test: add login module tests`
+    *   `test(coverage): add login module tests`
+
+Respond ONLY with the commit message, no explanations.
+
+Diff:
+
+diff --git a/openai_server.py b/openai_server.py
+index 543e8f3..3a03d3e 100644
+--- a/openai_server.py
++++ b/openai_server.py
+@@ -7,6 +7,7 @@ import io
+ import json
+ import logging
+ import os
++import sys
+ import tempfile
+ 
+ import mlx.core as mx
+@@ -45,7 +46,7 @@ try:
+     logger.info("Model loaded successfully!")
+ except Exception as e:
+     logger.error(f"Failed to load model: {e}")
+-    stt_model = None
++    sys.exit(1)
+ 
+ 
+ @app.get("/v1/models")
+@@ -69,7 +70,6 @@ async def health():
+     """Health check endpoint"""
+     return {
+         "status": "healthy",
+-        "model_loaded": stt_model is not None,
+         "model_path": MODEL_PATH,
+     }
+ 
+@@ -88,13 +88,6 @@ async def transcribe_audio(
+ 
+     Compatible with OpenAI's /v1/audio/transcriptions endpoint
+     """
+-    if stt_model is None:
+-        logger.error("Model not loaded!")
+-        return JSONResponse(
+-            status_code=500,
+-            content={"error": {"message": "Model not loaded", "type": "server_error"}},
+-        )
+-
+     try:
+         # Read and save uploaded file temporarily
+         audio_data = await file.read()
+@@ -165,11 +158,6 @@ async def realtime_transcription(websocket: WebSocket):
+     await websocket.accept()
+     logger.info("WebSocket connection established for real-time transcription")
+ 
+-    if stt_model is None:
+-        await websocket.send_json({"type": "error", "message": "Model not loaded"})
+-        await websocket.close()
+-        return
+-
+     transcriber = None
+     sample_rate = stt_model.preprocessor_config.sample_rate
+ 
